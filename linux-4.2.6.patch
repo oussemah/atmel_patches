@@ -472,7 +472,7 @@ new file mode 100644
 index 0000000..f376b05
 --- /dev/null
 +++ b/arch/arm/configs/acme-acqua_defconfig
-@@ -0,0 +1,211 @@
+@@ -0,0 +1,210 @@
 +# CONFIG_LOCALVERSION_AUTO is not set
 +# CONFIG_SWAP is not set
 +CONFIG_SYSVIPC=y
@@ -585,7 +585,7 @@ index 0000000..f376b05
 +CONFIG_KEYBOARD_GPIO=y
 +# CONFIG_INPUT_MOUSE is not set
 +CONFIG_INPUT_TOUCHSCREEN=y
-+# CONFIG_TOUCHSCREEN_ATMEL_MXT is not set
++CONFIG_TOUCHSCREEN_ATMEL_MXT=y
 +# CONFIG_SERIO is not set
 +CONFIG_LEGACY_PTY_COUNT=4
 +CONFIG_SERIAL_ATMEL=y
@@ -683,7 +683,6 @@ index 0000000..f376b05
 +CONFIG_CRYPTO_DEV_ATMEL_AES=y
 +CONFIG_CRYPTO_DEV_ATMEL_TDES=y
 +CONFIG_CRYPTO_DEV_ATMEL_SHA=y
-+CONFIG_TOUCHSCREEN_EDT_FT5X06=y
 diff --git a/arch/arm/configs/acme-aria_defconfig b/arch/arm/configs/acme-aria_defconfig
 new file mode 100644
 index 0000000..2f355bd
@@ -906,7 +905,7 @@ new file mode 100644
 index 0000000..2f355bd
 --- /dev/null
 +++ b/arch/arm/configs/acme-arietta_defconfig
-@@ -0,0 +1,210 @@
+@@ -0,0 +1,211 @@
 +# CONFIG_LOCALVERSION_AUTO is not set
 +# CONFIG_SWAP is not set
 +CONFIG_SYSVIPC=y
