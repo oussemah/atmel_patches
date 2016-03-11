@@ -2,7 +2,6 @@ From 482482c0128aa93dc02fd264bef19dcffdf5b687 Mon Sep 17 00:00:00 2001
 From: Oussema <oussema.elharbi@gmail.com>
 Date: Fri, 11 Mar 2016 22:38:50 +0100
 Subject: [PATCH] Adding support for custom LCD from InnoLux and acme boards
-
 ---
  arch/arm/boot/dts/acme-acqua.dts        | 162 ++++++++++++++++++++++++
  arch/arm/boot/dts/acme-aria.dts         | 146 ++++++++++++++++++++++
@@ -1262,7 +1261,7 @@ index f94201b..7493313 100644
 +};
 +
 +static const struct panel_desc custom_70inch = {
-+	.modes = &acme_70inch_mode,
++	.modes = &custom_70inch_mode,
 +	.num_modes = 1,
 +	.bpc = 8,
 +	.size = {
