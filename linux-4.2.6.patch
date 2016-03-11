@@ -172,8 +172,8 @@ index 0000000..030c8b5
 +	};
 +
 +    panel: panel {
-+        compatible = "custom,70inch", "simple-panel";
-+        /* compatible = "acme,70inch", "simple-panel"; */
++        /* compatible = "custom,70inch", "simple-panel"; */
++        compatible = "acme,70inch", "simple-panel";
 +        /* compatible = "acme,50inch", "simple-panel"; */
 +        /* compatible = "acme,70inch", "simple-panel"; */
 +        
