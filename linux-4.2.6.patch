@@ -472,7 +472,7 @@ new file mode 100644
 index 0000000..f376b05
 --- /dev/null
 +++ b/arch/arm/configs/acme-acqua_defconfig
-@@ -0,0 +1,210 @@
+@@ -0,0 +1,211 @@
 +# CONFIG_LOCALVERSION_AUTO is not set
 +# CONFIG_SWAP is not set
 +CONFIG_SYSVIPC=y
@@ -585,7 +585,7 @@ index 0000000..f376b05
 +CONFIG_KEYBOARD_GPIO=y
 +# CONFIG_INPUT_MOUSE is not set
 +CONFIG_INPUT_TOUCHSCREEN=y
-+CONFIG_TOUCHSCREEN_ATMEL_MXT=y
++# CONFIG_TOUCHSCREEN_ATMEL_MXT is not set
 +# CONFIG_SERIO is not set
 +CONFIG_LEGACY_PTY_COUNT=4
 +CONFIG_SERIAL_ATMEL=y
@@ -1117,6 +1117,7 @@ index 0000000..2f355bd
 +CONFIG_FONT_8x8=y
 +CONFIG_FONT_ACORN_8x8=y
 +CONFIG_FONT_MINI_4x6=y
++CONFIG_TOUCHSCREEN_EDT_FT5X06=y
 diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-simple.c
 index f94201b..29020a3 100644
 --- a/drivers/gpu/drm/panel/panel-simple.c
