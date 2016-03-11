@@ -91,7 +91,7 @@ index 0000000..030c8b5
 +			};
 +
 +			i2c0: i2c@f0014000 {
-+				status = "enabled";
++				status = "okay";
 +                touchscreen: edt-ft5x06@38 {
 +                    compatible = "edt,edt-ft5406", "edt,edt-ft5206";
 +                    reg = <0x38>;
