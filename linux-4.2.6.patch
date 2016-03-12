@@ -1,16 +1,17 @@
-From 482482c0128aa93dc02fd264bef19dcffdf5b687 Mon Sep 17 00:00:00 2001
+From bbfee6966132cf2fe99f0eace31410cef504739d Mon Sep 17 00:00:00 2001
 From: Oussema <oussema.elharbi@gmail.com>
-Date: Fri, 11 Mar 2016 22:38:50 +0100
-Subject: [PATCH] Adding support for custom LCD from InnoLux and acme boards
+Date: Sat, 12 Mar 2016 12:11:36 +0100
+Subject: [PATCH] removing touchsceen changes
+
 ---
- arch/arm/boot/dts/acme-acqua.dts        | 162 ++++++++++++++++++++++++
+ arch/arm/boot/dts/acme-acqua.dts        | 139 +++++++++++++++++++++
  arch/arm/boot/dts/acme-aria.dts         | 146 ++++++++++++++++++++++
  arch/arm/boot/dts/acme-arietta.dts      | 168 +++++++++++++++++++++++++
  arch/arm/configs/acme-acqua_defconfig   | 211 ++++++++++++++++++++++++++++++++
  arch/arm/configs/acme-aria_defconfig    | 211 ++++++++++++++++++++++++++++++++
  arch/arm/configs/acme-arietta_defconfig | 211 ++++++++++++++++++++++++++++++++
  drivers/gpu/drm/panel/panel-simple.c    | 112 +++++++++++++++++
- 7 files changed, 1221 insertions(+)
+ 7 files changed, 1198 insertions(+)
  create mode 100644 arch/arm/boot/dts/acme-acqua.dts
  create mode 100644 arch/arm/boot/dts/acme-aria.dts
  create mode 100644 arch/arm/boot/dts/acme-arietta.dts
@@ -20,10 +21,10 @@ Subject: [PATCH] Adding support for custom LCD from InnoLux and acme boards
 
 diff --git a/arch/arm/boot/dts/acme-acqua.dts b/arch/arm/boot/dts/acme-acqua.dts
 new file mode 100644
-index 0000000..030c8b5
+index 0000000..e7f8093
 --- /dev/null
 +++ b/arch/arm/boot/dts/acme-acqua.dts
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,139 @@
 +/*
 + * acme-acqua.dts - Device Tree file for Acqua A5
 + *
@@ -92,17 +93,6 @@ index 0000000..030c8b5
 +
 +			i2c0: i2c@f0014000 {
 +				status = "disabled";
-+                touchscreen: edt-ft5x06@38 {
-+                    compatible = "edt,edt-ft5406", "edt,edt-ft5206";
-+                    reg = <0x38>;
-+                    pinctrl-names = "default";
-+                    pinctrl-0 = <&edt_ft5x06_pins>;
-+                    interrupt-parent = <&pioE>;
-+                    interrupts = <31 IRQ_TYPE_LEVEL_HIGH 5>;
-+
-+                    reset-gpios = <&pioE 29 GPIO_ACTIVE_LOW>;
-+                    wake-gpios = <&pioE 15 GPIO_ACTIVE_LOW>;
-+                };
 +			};
 +
 +			i2c1: i2c@f0018000 {
@@ -127,18 +117,6 @@ index 0000000..030c8b5
 +				status = "okay";
 +			};
 +            
-+            pinctrl@fffff200 {
-+                pinctrl-names = "default";
-+                edt_ft5x06_pins: edt-ft5x06-pins {
-+                    atmel,pins =
-+                            <AT91_PIOE 31 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP_DEGLITCH /* PE31 IRQ */
-+                             AT91_PIOE 29 AT91_PERIPH_GPIO AT91_PINCTRL_NONE             /* PE29 RESET */
-+                             AT91_PIOE 15 AT91_PERIPH_GPIO AT91_PINCTRL_NONE>;           /* PE15 WAKE */
-+                    /* atmel,drive-strength = <0>; */
-+                    /* atmel,voltage = <1>; */
-+                    /* atmel,pull-up = <0>; */
-+                };
-+            };
 +		};
 +	};
 +
@@ -1164,7 +1142,7 @@ index 0000000..2f355bd
 +CONFIG_FONT_ACORN_8x8=y
 +CONFIG_FONT_MINI_4x6=y
 diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-simple.c
-index f94201b..7493313 100644
+index f94201b..09fd743 100644
 --- a/drivers/gpu/drm/panel/panel-simple.c
 +++ b/drivers/gpu/drm/panel/panel-simple.c
 @@ -1036,6 +1036,106 @@ static const struct panel_desc shelly_sca07010_bfn_lnn = {
