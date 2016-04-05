@@ -1,0 +1,616 @@
+From eaddc35027d559114d0084e1d879d5cb2703cc41 Mon Sep 17 00:00:00 2001
+From: Oussema Harbi <oussema.elharbi@gmail.com>
+Date: Sun, 3 Apr 2016 22:55:07 +0100
+Subject: [PATCH] Custom config to build for Acqua-5 board with InnoLux 7inch
+ LCD
+
+Signed-off-by: Oussema Harbi <oussema.elharbi@gmail.com>
+---
+ .../acme-acqua/rootfs_overlay/etc/fstab            |  9 +++
+ .../acme-acqua/rootfs_overlay/etc/init.d/S90qt_app | 35 +++++++++++
+ .../rootfs_overlay/etc/network/interfaces          | 25 ++++++++
+ .../acme-acqua/rootfs_overlay/usr/bin/keyb.qml     | 15 +++++
+ .../rootfs_overlay/usr/bin/qt_app_starter          | 12 ++++
+ .../acmesystems/acme-aria/rootfs_overlay/etc/fstab |  9 +++
+ .../rootfs_overlay/etc/network/interfaces          | 24 +++++++
+ .../acme-arietta/rootfs_overlay/etc/fstab          |  9 +++
+ .../rootfs_overlay/etc/network/interfaces          | 15 +++++
+ board/acmesystems/aria-g25/readme.txt              | 51 ---------------
+ configs/acme-acqua_defconfig                       | 16 +++++
+ configs/acme-aria_defconfig                        | 12 ++++
+ configs/acme-arietta_defconfig                     | 12 ++++
+ configs/acmesystems_aria_g25_128mb_defconfig       | 23 -------
+ configs/acmesystems_aria_g25_256mb_defconfig       | 23 -------
+ configs/oussema_defconfig                          | 73 ++++++++++++++++++++++
+ package/qt5/Config.in                              |  3 +
+ package/qt5/qmlapp/Config.in                       |  8 +++
+ package/qt5/qmlapp/qmlapp.mk                       | 25 ++++++++
+ package/qt5/qt5-custom-app/Config.in               |  8 +++
+ package/qt5/qt5-custom-app/qt5-custom-app.mk       | 25 ++++++++
+ 21 files changed, 335 insertions(+), 97 deletions(-)
+ create mode 100644 board/acmesystems/acme-acqua/rootfs_overlay/etc/fstab
+ create mode 100755 board/acmesystems/acme-acqua/rootfs_overlay/etc/init.d/S90qt_app
+ create mode 100644 board/acmesystems/acme-acqua/rootfs_overlay/etc/network/interfaces
+ create mode 100644 board/acmesystems/acme-acqua/rootfs_overlay/usr/bin/keyb.qml
+ create mode 100755 board/acmesystems/acme-acqua/rootfs_overlay/usr/bin/qt_app_starter
+ create mode 100644 board/acmesystems/acme-aria/rootfs_overlay/etc/fstab
+ create mode 100644 board/acmesystems/acme-aria/rootfs_overlay/etc/network/interfaces
+ create mode 100644 board/acmesystems/acme-arietta/rootfs_overlay/etc/fstab
+ create mode 100644 board/acmesystems/acme-arietta/rootfs_overlay/etc/network/interfaces
+ delete mode 100644 board/acmesystems/aria-g25/readme.txt
+ create mode 100644 configs/acme-acqua_defconfig
+ create mode 100644 configs/acme-aria_defconfig
+ create mode 100644 configs/acme-arietta_defconfig
+ delete mode 100644 configs/acmesystems_aria_g25_128mb_defconfig
+ delete mode 100644 configs/acmesystems_aria_g25_256mb_defconfig
+ create mode 100644 configs/oussema_defconfig
+ create mode 100644 package/qt5/qmlapp/Config.in
+ create mode 100644 package/qt5/qmlapp/qmlapp.mk
+ create mode 100644 package/qt5/qt5-custom-app/Config.in
+ create mode 100644 package/qt5/qt5-custom-app/qt5-custom-app.mk
+
+diff --git a/board/acmesystems/acme-acqua/rootfs_overlay/etc/fstab b/board/acmesystems/acme-acqua/rootfs_overlay/etc/fstab
+new file mode 100644
+index 0000000..4017aef
+--- /dev/null
++++ b/board/acmesystems/acme-acqua/rootfs_overlay/etc/fstab
+@@ -0,0 +1,9 @@
++# <file system>	<mount pt>	<type>	<options>	<dump>	<pass>
++/dev/root	/		ext2	rw,noauto	0	1
++proc		/proc		proc	defaults	0	0
++devpts		/dev/pts	devpts	defaults,gid=5,mode=620	0	0
++tmpfs		/dev/shm	tmpfs	mode=0777	0	0
++tmpfs		/tmp		tmpfs	mode=1777	0	0
++tmpfs		/run		tmpfs	mode=0755,nosuid,nodev	0	0
++sysfs		/sys		sysfs	defaults	0	0
++/dev/mmcblk0p1 /boot vfat noatime 0 1
+diff --git a/board/acmesystems/acme-acqua/rootfs_overlay/etc/init.d/S90qt_app b/board/acmesystems/acme-acqua/rootfs_overlay/etc/init.d/S90qt_app
+new file mode 100755
+index 0000000..4ea4787
+--- /dev/null
++++ b/board/acmesystems/acme-acqua/rootfs_overlay/etc/init.d/S90qt_app
+@@ -0,0 +1,35 @@
++#!/bin/sh
++#Script to start/stop the Qt App
++
++start() {
++	printf "Startinf Qt App"
++	start-stop-daemon -S -b -m -p /var/run/qt_app.pid \
++		--exec /usr/bin/qt_app_starter -- start
++	echo "OK"
++}
++
++stop() {
++	printf "Stopping Qt App"
++	start-stop-daemon -K -p /var/run/qt_app.pid
++	echo "OK"
++}
++
++case "$1" in 
++  start)
++	start
++	;;
++  stop)
++	stop
++	;;
++  restart)
++	stop
++	start
++	;;
++  *)
++	echo "Usage: $0 {start|stop|restart}"
++	exit 1
++esac
++
++exit $?
++
++
+diff --git a/board/acmesystems/acme-acqua/rootfs_overlay/etc/network/interfaces b/board/acmesystems/acme-acqua/rootfs_overlay/etc/network/interfaces
+new file mode 100644
+index 0000000..6cf6365
+--- /dev/null
++++ b/board/acmesystems/acme-acqua/rootfs_overlay/etc/network/interfaces
+@@ -0,0 +1,25 @@
++auto lo
++iface lo inet loopback
++
++#auto eth0
++#iface eth0 inet dhcp
++#	hwaddress ether 00:01:04:1b:2C:1F
++
++iface eth0 inet static
++	address 192.168.1.244
++	netmask 255.255.255.0
++	gateway 192.168.1.1
++
++#pre-up modprobe g_ether
++#auto usb0
++#iface usb0 inet static
++#	address 192.168.10.10
++#	netmask 255.255.255.0
++#	gateway 192.168.10.20
++
++#auto wlan0
++#iface wlan0 inet dhcp
++#    wireless-essid any
++#    pre-up wpa_supplicant -i wlan0 -c /boot/wpa_supplicant.conf -B
++#    post-down killall -q wpa_supplicant
++
+diff --git a/board/acmesystems/acme-acqua/rootfs_overlay/usr/bin/keyb.qml b/board/acmesystems/acme-acqua/rootfs_overlay/usr/bin/keyb.qml
+new file mode 100644
+index 0000000..71219f9
+--- /dev/null
++++ b/board/acmesystems/acme-acqua/rootfs_overlay/usr/bin/keyb.qml
+@@ -0,0 +1,15 @@
++import QtQuick 1.0
++
++Rectangle {
++    id: page
++    width: 500; height: 200
++    color: "lightgray"
++
++    Text {
++        id: helloText
++        text: "Hello world!"
++        y: 30
++        anchors.horizontalCenter: page.horizontalCenter
++        font.pointSize: 24; font.bold: true
++    }
++}
+diff --git a/board/acmesystems/acme-acqua/rootfs_overlay/usr/bin/qt_app_starter b/board/acmesystems/acme-acqua/rootfs_overlay/usr/bin/qt_app_starter
+new file mode 100755
+index 0000000..c8d12be
+--- /dev/null
++++ b/board/acmesystems/acme-acqua/rootfs_overlay/usr/bin/qt_app_starter
+@@ -0,0 +1,12 @@
++#!/bin/sh
++
++export QWS_KEYBOARD="USB:/dev/input/event1"
++QT_ARGS="-platform linuxfb -plugin evdevtouch"
++sleep 7;/usr/bin/controller $QT_ARGS
++
++
++
++
++
++
++
+diff --git a/board/acmesystems/acme-aria/rootfs_overlay/etc/fstab b/board/acmesystems/acme-aria/rootfs_overlay/etc/fstab
+new file mode 100644
+index 0000000..4017aef
+--- /dev/null
++++ b/board/acmesystems/acme-aria/rootfs_overlay/etc/fstab
+@@ -0,0 +1,9 @@
++# <file system>	<mount pt>	<type>	<options>	<dump>	<pass>
++/dev/root	/		ext2	rw,noauto	0	1
++proc		/proc		proc	defaults	0	0
++devpts		/dev/pts	devpts	defaults,gid=5,mode=620	0	0
++tmpfs		/dev/shm	tmpfs	mode=0777	0	0
++tmpfs		/tmp		tmpfs	mode=1777	0	0
++tmpfs		/run		tmpfs	mode=0755,nosuid,nodev	0	0
++sysfs		/sys		sysfs	defaults	0	0
++/dev/mmcblk0p1 /boot vfat noatime 0 1
+diff --git a/board/acmesystems/acme-aria/rootfs_overlay/etc/network/interfaces b/board/acmesystems/acme-aria/rootfs_overlay/etc/network/interfaces
+new file mode 100644
+index 0000000..03bdfaa
+--- /dev/null
++++ b/board/acmesystems/acme-aria/rootfs_overlay/etc/network/interfaces
+@@ -0,0 +1,24 @@
++auto lo
++iface lo inet loopback
++
++auto eth0
++iface eth0 inet dhcp
++	hwaddress ether 00:01:04:1b:2C:20
++
++#iface eth0 inet static
++#	address 192.168.1.244
++#	netmask 255.255.255.0
++#	gateway 192.168.1.1
++
++#pre-up modprobe g_ether
++#auto usb0
++#iface usb0 inet static
++#	address 192.168.10.10
++#	netmask 255.255.255.0
++#	gateway 192.168.10.20
++
++#auto wlan0
++#iface wlan0 inet dhcp
++#    wireless-essid any
++#    pre-up wpa_supplicant -i wlan0 -c /boot/wpa_supplicant.conf -B
++#    post-down killall -q wpa_supplicant
+diff --git a/board/acmesystems/acme-arietta/rootfs_overlay/etc/fstab b/board/acmesystems/acme-arietta/rootfs_overlay/etc/fstab
+new file mode 100644
+index 0000000..4017aef
+--- /dev/null
++++ b/board/acmesystems/acme-arietta/rootfs_overlay/etc/fstab
+@@ -0,0 +1,9 @@
++# <file system>	<mount pt>	<type>	<options>	<dump>	<pass>
++/dev/root	/		ext2	rw,noauto	0	1
++proc		/proc		proc	defaults	0	0
++devpts		/dev/pts	devpts	defaults,gid=5,mode=620	0	0
++tmpfs		/dev/shm	tmpfs	mode=0777	0	0
++tmpfs		/tmp		tmpfs	mode=1777	0	0
++tmpfs		/run		tmpfs	mode=0755,nosuid,nodev	0	0
++sysfs		/sys		sysfs	defaults	0	0
++/dev/mmcblk0p1 /boot vfat noatime 0 1
+diff --git a/board/acmesystems/acme-arietta/rootfs_overlay/etc/network/interfaces b/board/acmesystems/acme-arietta/rootfs_overlay/etc/network/interfaces
+new file mode 100644
+index 0000000..b70bcbd
+--- /dev/null
++++ b/board/acmesystems/acme-arietta/rootfs_overlay/etc/network/interfaces
+@@ -0,0 +1,15 @@
++auto lo
++iface lo inet loopback
++
++pre-up modprobe g_ether
++auto usb0
++iface usb0 inet static
++	address 192.168.10.10
++	netmask 255.255.255.0
++	gateway 192.168.10.20
++
++auto wlan0
++iface wlan0 inet dhcp
++    wireless-essid any
++    pre-up wpa_supplicant -i wlan0 -c /boot/wpa_supplicant.conf -B
++    post-down killall -q wpa_supplicant
+diff --git a/board/acmesystems/aria-g25/readme.txt b/board/acmesystems/aria-g25/readme.txt
+deleted file mode 100644
+index 734ccd2..0000000
+--- a/board/acmesystems/aria-g25/readme.txt
++++ /dev/null
+@@ -1,51 +0,0 @@
+-Build instructions
+-==================
+-
+-As a regular user configure and then build:
+-
+-$ make acmesystems_aria_g25_128mb_defconfig (128MB RAM variant)
+-  or...
+-$ make acmesystems_aria_g25_256mb_defconfig (256MB RAM variant)
+-
+-$ make
+-
+-Writing to the MicroSD card
+-===========================
+-
+-Assuming your Aria G25 baseboard has a MicroSD socket, for example with
+-the Terra baseboard, you'll need a blank MicroSD (obviously) initialized
+-in a particular way to be able to boot from it.
+-
+-Assuming the card is seen as /dev/sdb in your PC/laptop/other device
+-you'll need to run the following commands as root or via sudo.
+-
+-Make sure all of the card partitions are unmounted before starting.
+-
+-First we'll need to create two partitions:
+-
+-# sfdisk -uM /dev/sdb <<EOF
+-,32,6
+-;
+-EOF
+-
+-Then we'll need to create the empty filesystems:
+-
+-# mkdosfs -n SD_BOOT /dev/sdb1
+-# mkfs.ext4 -L SD_ROOT /dev/sdb2
+-
+-We'll populate the first partition (boot) with the relevant files:
+-
+-# mount /dev/sdb1 /mnt
+-# cp output/images/at91bootstrap.bin /mnt/BOOT.BIN
+-# cp output/images/zImage /mnt
+-# cp output/images/at91-ariag25.dtb /mnt
+-# umount /mnt
+-
+-And the root filesystem afterwards:
+-
+-# mount /dev/sdb2 /mnt
+-# tar -C /mnt output/images/rootfs.tar
+-# umount /mnt
+-
+-You're done, insert the MicroSD card in the slot and enjoy.
+-
+diff --git a/configs/acme-acqua_defconfig b/configs/acme-acqua_defconfig
+new file mode 100644
+index 0000000..5c6e480
+--- /dev/null
++++ b/configs/acme-acqua_defconfig
+@@ -0,0 +1,16 @@
++BR2_arm=y
++BR2_cortex_a5=y
++BR2_ARM_EABIHF=y
++BR2_ARM_FPU_VFPV4D16=y
++BR2_ARM_INSTRUCTIONS_THUMB2=y
++BR2_KERNEL_HEADERS_VERSION=y
++BR2_DEFAULT_KERNEL_VERSION="4.2.6"
++BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_4_2=y
++BR2_TARGET_GENERIC_ROOT_PASSWD="acmesystems"
++BR2_ROOTFS_OVERLAY="$(TOPDIR)/board/acmesystems/acme-acqua/rootfs_overlay"
++BR2_PACKAGE_LINUX_FIRMWARE=y
++BR2_PACKAGE_LINUX_FIRMWARE_RALINK_RT2XX=y
++BR2_PACKAGE_DROPBEAR=y
++BR2_PACKAGE_IW=y
++BR2_PACKAGE_WPA_SUPPLICANT=y
++BR2_PACKAGE_WPA_SUPPLICANT_AP_SUPPORT=y
+diff --git a/configs/acme-aria_defconfig b/configs/acme-aria_defconfig
+new file mode 100644
+index 0000000..dc2d45e
+--- /dev/null
++++ b/configs/acme-aria_defconfig
+@@ -0,0 +1,12 @@
++BR2_arm=y
++BR2_KERNEL_HEADERS_VERSION=y
++BR2_DEFAULT_KERNEL_VERSION="4.2.6"
++BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_4_2=y
++BR2_TARGET_GENERIC_ROOT_PASSWD="acmesystems"
++BR2_ROOTFS_OVERLAY="$(TOPDIR)/board/acmesystems/acme-aria/rootfs_overlay"
++BR2_PACKAGE_LINUX_FIRMWARE=y
++BR2_PACKAGE_LINUX_FIRMWARE_RALINK_RT2XX=y
++BR2_PACKAGE_DROPBEAR=y
++BR2_PACKAGE_IW=y
++BR2_PACKAGE_WPA_SUPPLICANT=y
++BR2_PACKAGE_WPA_SUPPLICANT_AP_SUPPORT=y
+diff --git a/configs/acme-arietta_defconfig b/configs/acme-arietta_defconfig
+new file mode 100644
+index 0000000..75af717
+--- /dev/null
++++ b/configs/acme-arietta_defconfig
+@@ -0,0 +1,12 @@
++BR2_arm=y
++BR2_KERNEL_HEADERS_VERSION=y
++BR2_DEFAULT_KERNEL_VERSION="4.2.6"
++BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_4_2=y
++BR2_TARGET_GENERIC_ROOT_PASSWD="acmesystems"
++BR2_ROOTFS_OVERLAY="$(TOPDIR)/board/acmesystems/acme-acqua/rootfs_overlay"
++BR2_PACKAGE_LINUX_FIRMWARE=y
++BR2_PACKAGE_LINUX_FIRMWARE_RALINK_RT2XX=y
++BR2_PACKAGE_DROPBEAR=y
++BR2_PACKAGE_IW=y
++BR2_PACKAGE_WPA_SUPPLICANT=y
++BR2_PACKAGE_WPA_SUPPLICANT_AP_SUPPORT=y
+diff --git a/configs/acmesystems_aria_g25_128mb_defconfig b/configs/acmesystems_aria_g25_128mb_defconfig
+deleted file mode 100644
+index 91865f5..0000000
+--- a/configs/acmesystems_aria_g25_128mb_defconfig
++++ /dev/null
+@@ -1,23 +0,0 @@
+-# Architecture
+-BR2_arm=y
+-
+-# Toolchain
+-BR2_KERNEL_HEADERS_VERSION=y
+-BR2_DEFAULT_KERNEL_VERSION="4.1.1"
+-BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_4_1=y
+-
+-# Kernel
+-BR2_LINUX_KERNEL=y
+-BR2_LINUX_KERNEL_CUSTOM_VERSION=y
+-BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="4.1.1"
+-BR2_LINUX_KERNEL_DEFCONFIG="at91_dt"
+-BR2_LINUX_KERNEL_ZIMAGE=y
+-BR2_LINUX_KERNEL_DTS_SUPPORT=y
+-BR2_LINUX_KERNEL_INTREE_DTS_NAME="at91-ariag25"
+-
+-# Bootloader
+-BR2_TARGET_AT91BOOTSTRAP3=y
+-BR2_TARGET_AT91BOOTSTRAP3_CUSTOM_GIT=y
+-BR2_TARGET_AT91BOOTSTRAP3_CUSTOM_REPO_URL="git://github.com/tanzilli/at91bootstrap.git"
+-BR2_TARGET_AT91BOOTSTRAP3_CUSTOM_REPO_VERSION="3f957cec253abc80fd10c733e5e596f46e1aef56"
+-BR2_TARGET_AT91BOOTSTRAP3_DEFCONFIG="aria-128m"
+diff --git a/configs/acmesystems_aria_g25_256mb_defconfig b/configs/acmesystems_aria_g25_256mb_defconfig
+deleted file mode 100644
+index 936b4f4..0000000
+--- a/configs/acmesystems_aria_g25_256mb_defconfig
++++ /dev/null
+@@ -1,23 +0,0 @@
+-# Architecture
+-BR2_arm=y
+-
+-# Toolchain
+-BR2_KERNEL_HEADERS_VERSION=y
+-BR2_DEFAULT_KERNEL_VERSION="4.1.1"
+-BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_4_1=y
+-
+-# Kernel
+-BR2_LINUX_KERNEL=y
+-BR2_LINUX_KERNEL_CUSTOM_VERSION=y
+-BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="4.1.1"
+-BR2_LINUX_KERNEL_DEFCONFIG="at91_dt"
+-BR2_LINUX_KERNEL_ZIMAGE=y
+-BR2_LINUX_KERNEL_DTS_SUPPORT=y
+-BR2_LINUX_KERNEL_INTREE_DTS_NAME="at91-ariag25"
+-
+-# Bootloader
+-BR2_TARGET_AT91BOOTSTRAP3=y
+-BR2_TARGET_AT91BOOTSTRAP3_CUSTOM_GIT=y
+-BR2_TARGET_AT91BOOTSTRAP3_CUSTOM_REPO_URL="git://github.com/tanzilli/at91bootstrap.git"
+-BR2_TARGET_AT91BOOTSTRAP3_CUSTOM_REPO_VERSION="3f957cec253abc80fd10c733e5e596f46e1aef56"
+-BR2_TARGET_AT91BOOTSTRAP3_DEFCONFIG="aria-256m"
+diff --git a/configs/oussema_defconfig b/configs/oussema_defconfig
+new file mode 100644
+index 0000000..ea2db4d
+--- /dev/null
++++ b/configs/oussema_defconfig
+@@ -0,0 +1,73 @@
++BR2_arm=y
++BR2_cortex_a5=y
++BR2_ARM_EABIHF=y
++BR2_ARM_FPU_VFPV4D16=y
++BR2_ARM_INSTRUCTIONS_THUMB2=y
++BR2_JLEVEL=4
++BR2_CCACHE=y
++BR2_KERNEL_HEADERS_VERSION=y
++BR2_DEFAULT_KERNEL_VERSION="4.2.6"
++BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_4_2=y
++BR2_TOOLCHAIN_BUILDROOT_WCHAR=y
++BR2_TOOLCHAIN_BUILDROOT_CXX=y
++BR2_PACKAGE_HOST_GDB=y
++BR2_PACKAGE_HOST_GDB_TUI=y
++BR2_TARGET_GENERIC_ISSUE="Welcome to Buildroot (Oussema Harbi)"
++BR2_TARGET_GENERIC_ROOT_PASSWD="a"
++BR2_ROOTFS_OVERLAY="$(TOPDIR)/board/acmesystems/acme-acqua/rootfs_overlay"
++BR2_LINUX_KERNEL=y
++BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
++BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.4.5.tar.xz"
++BR2_LINUX_KERNEL_PATCH="https://raw.githubusercontent.com/oussemah/atmel_patches/master/linux-4.4.5.patch"
++BR2_LINUX_KERNEL_DEFCONFIG="acme-acqua"
++BR2_LINUX_KERNEL_ZIMAGE=y
++BR2_LINUX_KERNEL_DTS_SUPPORT=y
++BR2_LINUX_KERNEL_INTREE_DTS_NAME="acme-acqua"
++BR2_PACKAGE_MTD=y
++BR2_PACKAGE_MTD_MKFSUBIFS=y
++BR2_PACKAGE_FBDUMP=y
++BR2_PACKAGE_MESA3D=y
++BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_SWRAST=y
++BR2_PACKAGE_MESA3D_OPENGL_EGL=y
++BR2_PACKAGE_MESA3D_OPENGL_ES=y
++BR2_PACKAGE_QT5=y
++BR2_PACKAGE_QT5BASE_LICENSE_APPROVED=y
++BR2_PACKAGE_QT5BASE_EXAMPLES=y
++BR2_PACKAGE_QT5BASE_OPENGL_LIB=y
++BR2_PACKAGE_QT5BASE_LINUXFB=y
++BR2_PACKAGE_QT5BASE_EGLFS=y
++BR2_PACKAGE_QT5BASE_DEFAULT_QPA="linuxfb"
++BR2_PACKAGE_QT5BASE_GIF=y
++BR2_PACKAGE_QT5BASE_JPEG=y
++BR2_PACKAGE_QT5BASE_PNG=y
++BR2_PACKAGE_QT5BASE_TSLIB=y
++BR2_PACKAGE_QT5CONNECTIVITY=y
++BR2_PACKAGE_QT5IMAGEFORMATS=y
++BR2_PACKAGE_QT5MULTIMEDIA=y
++BR2_PACKAGE_QT5QUICKCONTROLS=y
++BR2_PACKAGE_QT5SENSORS=y
++BR2_PACKAGE_QT5SERIALPORT=y
++BR2_PACKAGE_QT5SVG=y
++BR2_PACKAGE_QT5WEBSOCKETS=y
++BR2_PACKAGE_QT5QUICK1=y
++BR2_PACKAGE_QT5WEBKIT=y
++BR2_PCAKAGE_QT5_CUSTOM_APP=y
++BR2_PACKAGE_QMLAPP=y
++BR2_PACKAGE_QT5WEBKIT_EXAMPLES=y
++BR2_PACKAGE_LINUX_FIRMWARE=y
++BR2_PACKAGE_LINUX_FIRMWARE_RALINK_RT2XX=y
++BR2_PACKAGE_EVTEST=y
++BR2_PACKAGE_I2C_TOOLS=y
++BR2_PACKAGE_LIBSVG=y
++BR2_PACKAGE_LIBMODBUS=y
++BR2_PACKAGE_DROPBEAR=y
++BR2_PACKAGE_IW=y
++BR2_PACKAGE_WPA_SUPPLICANT=y
++BR2_PACKAGE_WPA_SUPPLICANT_AP_SUPPORT=y
++BR2_PACKAGE_IPKG=y
++BR2_PACKAGE_MC=y
++BR2_PACKAGE_NANO=y
++BR2_TARGET_ROOTFS_UBIFS=y
++BR2_TARGET_ROOTFS_UBI=y
++BR2_PACKAGE_HOST_DTC=y
++BR2_PACKAGE_HOST_SAM_BA=y
+diff --git a/package/qt5/Config.in b/package/qt5/Config.in
+index 22fd0c0..0bccc63 100644
+--- a/package/qt5/Config.in
++++ b/package/qt5/Config.in
+@@ -49,5 +49,8 @@ comment "legacy compatibility"
+ source "package/qt5/qt5quick1/Config.in"
+ source "package/qt5/qt5script/Config.in"
+ source "package/qt5/qt5webkit/Config.in"
++source "package/qt5/qt5-custom-app/Config.in"
++source "package/qt5/qmlapp/Config.in"
+ source "package/qt5/qt5webkit-examples/Config.in"
++
+ endif
+diff --git a/package/qt5/qmlapp/Config.in b/package/qt5/qmlapp/Config.in
+new file mode 100644
+index 0000000..b7f76e0
+--- /dev/null
++++ b/package/qt5/qmlapp/Config.in
+@@ -0,0 +1,8 @@
++config BR2_PACKAGE_QMLAPP
++	bool "qmlapp"
++	depends on BR2_PACKAGE_QT5
++	help
++	   This is a demo qt application
++
++           https://github.com/oussemah/qtapp_custom.git
++
+diff --git a/package/qt5/qmlapp/qmlapp.mk b/package/qt5/qmlapp/qmlapp.mk
+new file mode 100644
+index 0000000..c51fb48
+--- /dev/null
++++ b/package/qt5/qmlapp/qmlapp.mk
+@@ -0,0 +1,25 @@
++###############################################################################################
++#
++# qt5 custom app
++# A 2 frame application that allows to update/check GPIO status & configure network connection
++#
++###############################################################################################
++
++QMLAPP_SITE = /usr/local/workspace/custom_libs/qt/QtFreeVirtualKeyboard/examples/qmlapp
++QMLAPP_SITE_METHOD = local
++QMLAPP_INSTALL_STAGING = YES
++QMLAPP_DEPENDENCIES = qt5base
++
++define QMLAPP_CONFIGURE_CMDS
++	(cd $(@D); $(TARGET_MAKE_ENV) $(HOST_DIR)/usr/bin/qmake)
++endef
++
++define QMLAPP_BUILD_CMDS
++	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)
++endef
++
++define QMLAPP_INSTALL_TARGET_CMDS
++	$(INSTALL) -D -m 0755 $(@D)/virtualkeyboardqmldemo $(TARGET_DIR)/usr/bin/virtualkeyboardqmldemo
++endef
++
++$(eval $(generic-package))
+diff --git a/package/qt5/qt5-custom-app/Config.in b/package/qt5/qt5-custom-app/Config.in
+new file mode 100644
+index 0000000..dba6926
+--- /dev/null
++++ b/package/qt5/qt5-custom-app/Config.in
+@@ -0,0 +1,8 @@
++config BR2_PCAKAGE_QT5_CUSTOM_APP
++	bool "qt5_custom_app"
++	depends on BR2_PACKAGE_QT5
++	help
++	   This is a demo qt application
++
++           https://github.com/oussemah/qtapp_custom.git
++
+diff --git a/package/qt5/qt5-custom-app/qt5-custom-app.mk b/package/qt5/qt5-custom-app/qt5-custom-app.mk
+new file mode 100644
+index 0000000..57a7811
+--- /dev/null
++++ b/package/qt5/qt5-custom-app/qt5-custom-app.mk
+@@ -0,0 +1,25 @@
++###############################################################################################
++#
++# qt5 custom app
++# A 2 frame application that allows to update/check GPIO status & configure network connection
++#
++###############################################################################################
++
++QT5_CUSTOM_APP_SITE = /usr/local/workspace/custom_libs/qt/gpio_controller_atmel/controller
++QT5_CUSTOM_APP_SITE_METHOD = local
++QT5_CUSTOM_APP_INSTALL_STAGING = YES
++QT5_CUSTOM_APP_DEPENDENCIES = qt5base
++
++define QT5_CUSTOM_APP_CONFIGURE_CMDS
++	(cd $(@D); $(TARGET_MAKE_ENV) $(HOST_DIR)/usr/bin/qmake)
++endef
++
++define QT5_CUSTOM_APP_BUILD_CMDS
++	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)
++endef
++
++define QT5_CUSTOM_APP_INSTALL_TARGET_CMDS
++	$(INSTALL) -D -m 0755 $(@D)/controller $(TARGET_DIR)/usr/bin/controller
++endef
++
++$(eval $(generic-package))
+-- 
+1.9.1
+
